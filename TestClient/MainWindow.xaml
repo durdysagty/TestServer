@@ -1,0 +1,147 @@
+﻿<Window DataContext="{Binding MainWindowViewModel}" x:Class="TestClient.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TestClient.Services"
+        xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+        mc:Ignorable="d"
+        Title="Client" Height="350" Width="600" Closing="Window_Closing" ResizeMode="NoResize" >
+    <Window.Resources>
+        <local:BoolToVisibility x:Key="BoolToVisibility"/>
+        <local:ListToVisibility x:Key="ListToVisibility"/>
+        <local:TestImageToVisibility x:Key="TestImageToVisibility"/>
+        <Style x:Key="MultipleChoice" TargetType="Grid">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Test.TestType}" Value="MultipleChoice">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="Sequence" TargetType="Grid">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Test.TestType}" Value="Sequence">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="SelectImages" TargetType="Grid">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Test.TestType}" Value="SelectImages">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+    <Grid DataContext="{Binding}">
+        <TextBlock Text="Ваш логин:" Height="29" LineHeight="22" LineStackingStrategy="BlockLineHeight" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="5,0,0,0" />
+        <TextBox IsEnabled="{Binding EnableLogin}" Text="{Binding ClientUser.Name, UpdateSourceTrigger=PropertyChanged}" Width="120" Height="29" VerticalAlignment="Top" HorizontalAlignment="Left" VerticalContentAlignment="Center"  Margin="70,0,0,0">
+            <TextBox.Style>
+                <Style TargetType="{x:Type TextBox}">
+                    <Setter Property="BorderBrush" Value="{Binding TextBoxColor}"/>
+                </Style>
+            </TextBox.Style>
+        </TextBox>
+        <Button Command="{Binding Connect}" Content="{Binding ButtonName}" Width="120" Height="29" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="200,0,0,0"/>
+        <TextBlock Text="{Binding Already}" Height="29" LineHeight="22" LineStackingStrategy="BlockLineHeight" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="330,0,0,0" />
+        <Grid Visibility="{Binding ClientUser.IsConnected, Converter={StaticResource BoolToVisibility}}" Margin="0,34,0,0">
+            <TextBlock Visibility="{Binding ClientUser.IsTestPassed, Converter={StaticResource BoolToVisibility}}" HorizontalAlignment="Center" VerticalAlignment="Center" Text="Вы уже прошли тест!" Margin="0,0,0,70" />
+            <Grid Visibility="{Binding ClientUser.IsTestPassed, Converter={StaticResource BoolToVisibility}, ConverterParameter=True}" Margin="0,0,0,70">
+                <Grid  Visibility="{Binding IsTestStarted, Converter={StaticResource BoolToVisibility}, ConverterParameter=True}">
+                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="Вы ещё не прошли тест!" />
+                    <Button Command="{Binding GetTest}" Content="Начать тест" Width="120" Height="28" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,70,0,0"/>
+                </Grid>
+                <Grid Visibility="{Binding IsTestStarted, Converter={StaticResource BoolToVisibility}}" Margin="0,40,0,0">
+                    <TextBlock Text="{Binding Test.Text}" HorizontalAlignment="Center" />
+                    <Grid x:Name="MultipleChoice" Style="{StaticResource MultipleChoice}">
+                        <ItemsControl ItemsSource="{Binding Test.Numbers}" Margin="0,30,0,0" HorizontalAlignment="Center">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemContainerStyle>
+                                <Style TargetType="ContentPresenter">
+                                    <Setter Property="Margin" Value="5"/>
+                                </Style>
+                            </ItemsControl.ItemContainerStyle>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button 
+                                        Content="{Binding}"
+                                        Command="{Binding DataContext.AddAnswer, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                        CommandParameter="{Binding}"
+                                        Width="40" Height="30">
+                                        <Button.IsEnabled>
+                                            <MultiBinding Converter="{StaticResource ListToVisibility}">
+                                                <Binding />
+                                                <Binding Path="DataContext.Answers" RelativeSource="{RelativeSource AncestorType=ItemsControl}" />
+                                            </MultiBinding>
+                                        </Button.IsEnabled>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Button Command="{Binding SendTest}" Content="Отправить" Width="120" Height="28" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,105,0,0"/>
+                    </Grid>
+                    <Grid x:Name="Sequence" Style="{StaticResource Sequence}">
+                        <ItemsControl ItemsSource="{Binding Test.Numbers}" Margin="0,60,0,0" HorizontalAlignment="Center">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemContainerStyle>
+                                <Style TargetType="ContentPresenter">
+                                    <Setter Property="Margin" Value="5"/>
+                                </Style>
+                            </ItemsControl.ItemContainerStyle>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock  FontSize="20" Text="{Binding}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBox Text="{Binding SequenceAnswer0, UpdateSourceTrigger=PropertyChanged}" Width="40" Height="38" HorizontalAlignment="Center" Margin="197,0,0,5" TextAlignment="Center" FontSize="20" Padding="0,4,0,0" />
+                        <TextBox Text="{Binding SequenceAnswer1, UpdateSourceTrigger=PropertyChanged}" Width="40" Height="38" HorizontalAlignment="Center" Margin="296,0,0,5" TextAlignment="Center" FontSize="20" Padding="0,4,0,0" />
+                        <Button Command="{Binding SendTest}" Content="Отправить" Width="120" Height="28" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,105,0,0"/>
+                    </Grid>
+                    <Grid x:Name="SelectImages" Style="{StaticResource SelectImages}">
+                        <ItemsControl ItemsSource="{Binding Images}" Margin="0,60,0,50" HorizontalAlignment="Center">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemContainerStyle>
+                                <Style TargetType="ContentPresenter">
+                                    <Setter Property="Margin" Value="3"/>
+                                </Style>
+                            </ItemsControl.ItemContainerStyle>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button
+                                        Command="{Binding DataContext.AddAnswer, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                        CommandParameter="{Binding}"
+                                        Width="64" Height="44" BorderThickness="1" Padding="3">
+                                        <Button.IsEnabled>
+                                            <MultiBinding Converter="{StaticResource TestImageToVisibility}">
+                                                <Binding />
+                                                <Binding Path="DataContext.ImageAnswers" RelativeSource="{RelativeSource AncestorType=ItemsControl}" />
+                                            </MultiBinding>
+                                        </Button.IsEnabled>
+                                        <Image Source="{Binding Path=Image}" Stretch="Fill" />
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Button Command="{Binding SendTest}" Content="Отправить" Width="120" Height="28" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,120,0,0"/>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>
